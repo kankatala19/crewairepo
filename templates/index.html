@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrewAI Multi-Agent System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <i class="fas fa-history"></i>
+                    <h3>History</h3>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="sidebar-actions">
+                    <button id="newChatButton" class="new-chat-button">
+                        <i class="fas fa-plus"></i>
+                        New Task
+                    </button>
+                    <button id="clearHistoryButton" class="clear-button">
+                        <i class="fas fa-trash"></i>
+                        Clear All
+                    </button>
+                </div>
+                
+                <div class="history-list" id="sidebarHistoryList">
+                    <div class="history-loading" id="sidebarHistoryLoading">
+                        <div class="spinner"></div>
+                        <p>Loading...</p>
+                    </div>
+                    <div class="history-empty" id="sidebarHistoryEmpty" style="display: none;">
+                        <i class="fas fa-inbox"></i>
+                        <p>No tasks yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-container">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="logo">
+                        <i class="fas fa-users-cog"></i>
+                        <h1>CrewAI Multi-Agent System</h1>
+                    </div>
+                    <div class="header-actions">
+                        <button class="history-toggle" id="historyToggle" title="View History">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <div class="status-indicator">
+                            <span class="status-dot" id="statusDot"></span>
+                            <span class="status-text" id="statusText">Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+        <!-- Agent Workflow Visualization -->
+        <div class="workflow-container">
+            <div class="workflow-header">
+                <h2>Agent Workflow</h2>
+                <div class="workflow-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="progress-text" id="progressText">0%</span>
+                </div>
+            </div>
+            
+            <div class="agents-container">
+                <div class="agent-card" id="plannerCard">
+                    <div class="agent-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Planner</h3>
+                        <p>Breaks down your request into structured subtasks</p>
+                        <div class="agent-status" id="plannerStatus">Waiting</div>
+                    </div>
+                </div>
+                
+                <div class="agent-card" id="writerCard">
+                    <div class="agent-icon">
+                        <i class="fas fa-pen-fancy"></i>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Writer</h3>
+                        <p>Generates detailed and clear content from research</p>
+                        <div class="agent-status" id="writerStatus">Waiting</div>
+                    </div>
+                </div>
+                
+                <div class="agent-card" id="reviewerCard">
+                    <div class="agent-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="agent-info">
+                        <h3>Reviewer</h3>
+                        <p>Ensures clarity, quality, and correctness of final output</p>
+                        <div class="agent-status" id="reviewerStatus">Waiting</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="input-container">
+                    <div class="input-header">
+                        <h3>Enter Your Task or Query</h3>
+                        <p>Describe what you want the AI agents to help you with</p>
+                    </div>
+                    <div class="input-wrapper">
+                        <button id="attachFilesButton" class="attach-button attach-inside" title="Attach files/images">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <textarea 
+                            id="promptInput" 
+                            placeholder="e.g., Write a comprehensive guide on machine learning for beginners..." 
+                            rows="3"
+                            maxlength="2000"
+                        ></textarea>
+                        <input id="fileInput" type="file" multiple style="display:none" />
+                        <button id="startCrewButton" class="start-button">
+                            <i class="fas fa-play"></i>
+                            <span>Start Crew</span>
+                        </button>
+                    </div>
+                    <div id="selectedFiles" class="selected-files" style="display:none"></div>
+                    <div class="input-footer"></div>
+                </div>
+            </div>
+
+
+            <!-- Output Section -->
+            <div class="output-section" id="outputSection" style="display: none;">
+                <div class="output-header">
+                    <h3>Final Output</h3>
+                    <div class="output-actions">
+                        <button id="copyOutputButton" class="action-button">
+                            <i class="fas fa-copy"></i>
+                            Copy
+                        </button>
+                        <button id="downloadOutputButton" class="action-button">
+                            <i class="fas fa-download"></i>
+                            Download
+                        </button>
+                        <button id="resetButton" class="action-button">
+                            <i class="fas fa-refresh"></i>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+                <div class="output-content" id="outputContent">
+                    <!-- Output will be displayed here -->
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p id="loadingText">Initializing agents...</p>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Error</h3>
+                <button class="close-button" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="okButton">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Success</h3>
+                <button class="close-button" id="closeSuccessModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="okSuccessButton">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Details Modal -->
+    <div class="modal" id="taskDetailsModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>Task Details</h3>
+                <button class="close-button" id="closeTaskDetailsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="task-details">
+                    <div class="task-info">
+                        <div class="task-field">
+                            <label>Status:</label>
+                            <span class="task-status" id="taskStatus"></span>
+                        </div>
+                        <div class="task-field">
+                            <label>Created:</label>
+                            <span id="taskCreated"></span>
+                        </div>
+                        <div class="task-field">
+                            <label>Completed:</label>
+                            <span id="taskCompleted"></span>
+                        </div>
+                    </div>
+                    <div class="task-prompt">
+                        <label>Original Prompt:</label>
+                        <div class="task-prompt-content" id="taskPromptContent"></div>
+                    </div>
+                    <div class="task-output">
+                        <label>Output:</label>
+                        <div class="task-output-content" id="taskOutputContent"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="deleteTaskButton">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+                <button class="btn btn-primary" id="closeTaskDetailsButton">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+                <button class="close-button" id="closeConfirmModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelConfirmButton">Cancel</button>
+                <button class="btn btn-danger" id="confirmButton">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
