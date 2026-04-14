@@ -12,6 +12,7 @@ class CrewAIManager {
         this.progressText = document.getElementById('progressText');
         this.outputSection = document.getElementById('outputSection');
         this.outputContent = document.getElementById('outputContent');
+        this.chatThread = document.getElementById('chatThread');
         this.loadingOverlay = document.getElementById('loadingOverlay');
         this.loadingText = document.getElementById('loadingText');
         
@@ -61,6 +62,7 @@ class CrewAIManager {
         this.statusCheckInterval = null;
         this.isRunning = false;
         this.currentTaskId = null;
+        this.currentThreadId = null;
         this.pendingAction = null;
         
         this.init();
@@ -183,9 +185,16 @@ class CrewAIManager {
             this.startCrewButton.disabled = true;
             this.promptInput.disabled = true;
             this.showLoadingOverlay('Starting crew...');
+
+            // Ensure chat is visible and append the user's message
+            this.outputSection.style.display = 'block';
+            this.appendChatMessage('user', prompt);
             
             const formData = new FormData();
             formData.append('prompt', prompt);
+            if (this.currentThreadId) {
+                formData.append('thread_id', this.currentThreadId);
+            }
             if (this.fileInput && this.fileInput.files && this.fileInput.files.length > 0) {
                 Array.from(this.fileInput.files).forEach(file => formData.append('files', file));
             }
@@ -201,6 +210,7 @@ class CrewAIManager {
             
             const data = await response.json();
             this.currentTaskId = data.task_id;
+            this.currentThreadId = data.thread_id || this.currentThreadId;
             
             // Clear the prompt input and selected files after starting the crew
             this.promptInput.value = '';
@@ -225,6 +235,36 @@ class CrewAIManager {
             this.hideLoadingOverlay();
             this.showError(error.message);
         }
+    }
+
+    appendChatMessage(role, content) {
+        if (!this.chatThread) return;
+        const messageEl = document.createElement('div');
+        messageEl.className = `chat-message ${role}`;
+
+        const roleEl = document.createElement('div');
+        roleEl.className = 'chat-role';
+        roleEl.textContent = role === 'user' ? 'You' : 'Assistant';
+
+        const contentEl = document.createElement('div');
+        contentEl.className = 'chat-content';
+        contentEl.textContent = content || '';
+
+        messageEl.appendChild(roleEl);
+        messageEl.appendChild(contentEl);
+        this.chatThread.appendChild(messageEl);
+
+        // Scroll to bottom
+        this.outputContent.scrollTop = this.outputContent.scrollHeight;
+    }
+
+    renderThreadMessages(messages) {
+        if (!this.chatThread) return;
+        this.chatThread.innerHTML = '';
+        (messages || []).forEach(m => {
+            if (!m || !m.role) return;
+            this.appendChatMessage(m.role, m.content || '');
+        });
     }
 
     updateSelectedFiles() {
@@ -357,11 +397,23 @@ class CrewAIManager {
     
     async loadFinalOutput() {
         try {
+            // Prefer conversation thread messages (keeps full chat)
+            if (this.currentThreadId) {
+                const response = await fetch(`/threads/${this.currentThreadId}/messages`);
+                const data = await response.json();
+                if (data && data.messages) {
+                    this.renderThreadMessages(data.messages);
+                    this.outputSection.style.display = 'block';
+                    this.outputSection.scrollIntoView({ behavior: 'smooth' });
+                    return;
+                }
+            }
+
+            // Fallback to legacy final-output endpoint
             const response = await fetch('/crew_output');
             const data = await response.json();
-            
             if (data.is_complete && data.output) {
-                this.outputContent.textContent = data.output;
+                this.appendChatMessage('assistant', data.output);
                 this.outputSection.style.display = 'block';
                 this.outputSection.scrollIntoView({ behavior: 'smooth' });
             }
@@ -387,7 +439,8 @@ class CrewAIManager {
     
     async copyOutput() {
         try {
-            await navigator.clipboard.writeText(this.outputContent.textContent);
+            const text = this.chatThread ? this.chatThread.innerText : this.outputContent.textContent;
+            await navigator.clipboard.writeText(text);
             this.showSuccess('Output copied to clipboard!');
         } catch (error) {
             console.error('Failed to copy:', error);
@@ -396,7 +449,7 @@ class CrewAIManager {
     }
     
     downloadOutput() {
-        const content = this.outputContent.textContent;
+        const content = this.chatThread ? this.chatThread.innerText : this.outputContent.textContent;
         const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -417,7 +470,7 @@ class CrewAIManager {
                 this.updateProgress(0);
                 this.updateStatus('ready', 'Ready');
                 this.outputSection.style.display = 'none';
-                this.outputContent.textContent = '';
+                if (this.chatThread) this.chatThread.innerHTML = '';
                 this.promptInput.value = '';
                 this.promptInput.style.height = 'auto';
                 this.updateCharCount();
@@ -484,6 +537,7 @@ class CrewAIManager {
     }
     
     startNewTask() {
+        this.currentThreadId = null;
         this.closeSidebar();
         this.resetCrew();
         this.promptInput.focus();
@@ -494,13 +548,13 @@ class CrewAIManager {
         try {
             this.showSidebarHistoryLoading();
             
-            const response = await fetch('/history');
+            const response = await fetch('/threads');
             if (!response.ok) {
                 throw new Error('Failed to load history');
             }
             
             const data = await response.json();
-            this.displaySidebarHistory(data.tasks);
+            this.displaySidebarHistory(data.threads || []);
             
         } catch (error) {
             console.error('Error loading history:', error);
@@ -521,23 +575,23 @@ class CrewAIManager {
         this.sidebarHistoryEmpty.style.display = 'flex';
     }
     
-    displaySidebarHistory(tasks) {
+    displaySidebarHistory(threads) {
         this.sidebarHistoryLoading.style.display = 'none';
         this.sidebarHistoryEmpty.style.display = 'none';
         this.sidebarHistoryList.style.display = 'block';
         
-        if (tasks.length === 0) {
+        if (threads.length === 0) {
             this.showSidebarHistoryEmpty();
             return;
         }
         
-        this.sidebarHistoryList.innerHTML = tasks.map(task => this.createSidebarHistoryItem(task)).join('');
+        this.sidebarHistoryList.innerHTML = threads.map(t => this.createSidebarHistoryItem(t)).join('');
         
         // Add event listeners to history items
         this.sidebarHistoryList.querySelectorAll('.history-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 if (!e.target.closest('.history-item-action')) {
-                    this.loadTaskFromHistory(item.dataset.taskId);
+                    this.loadThreadFromHistory(item.dataset.threadId);
                 }
             });
         });
@@ -545,26 +599,27 @@ class CrewAIManager {
         this.sidebarHistoryList.querySelectorAll('.history-item-action').forEach(action => {
             action.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const taskId = action.closest('.history-item').dataset.taskId;
+                const threadId = action.closest('.history-item').dataset.threadId;
                 const actionType = action.dataset.action;
                 
                 if (actionType === 'view') {
-                    this.showTaskDetails(taskId);
+                    this.loadThreadFromHistory(threadId);
                 } else if (actionType === 'delete') {
-                    this.confirmDeleteTask(taskId);
+                    this.confirmDeleteThread(threadId);
                 }
             });
         });
     }
     
-    createSidebarHistoryItem(task) {
+    createSidebarHistoryItem(thread) {
+        const titleText = (thread.last_message || '').trim() || '(empty chat)';
         return `
-            <div class="history-item ${task.status}" data-task-id="${task.id}">
+            <div class="history-item completed" data-thread-id="${thread.thread_id}">
                 <div class="history-item-icon">
-                    <i class="fas fa-${task.status === 'completed' ? 'check' : task.status === 'running' ? 'clock' : 'exclamation'}"></i>
+                    <i class="fas fa-comments"></i>
                 </div>
                 <div class="history-item-content">
-                    <div class="history-item-title">${this.truncateText(task.prompt, 50)}</div>
+                    <div class="history-item-title">${this.truncateText(titleText, 50)}</div>
                 </div>
                 <div class="history-item-actions">
                     <button class="history-item-action" data-action="view" title="View Details">
@@ -578,60 +633,50 @@ class CrewAIManager {
         `;
     }
     
-    async loadTaskFromHistory(taskId) {
+    async loadThreadFromHistory(threadId) {
         try {
-            const response = await fetch(`/history/${taskId}`);
+            const response = await fetch(`/threads/${threadId}/messages`);
             if (!response.ok) {
-                throw new Error('Failed to load task');
+                throw new Error('Failed to load thread');
             }
             
-            const task = await response.json();
-            
-            // Load the task into the current interface
-            this.promptInput.value = task.prompt;
-            this.promptInput.style.height = 'auto';
-            this.updateCharCount();
-            
-            if (task.status === 'completed' && task.output) {
-                this.outputContent.textContent = task.output;
-                this.outputSection.style.display = 'block';
-            }
+            const data = await response.json();
+            this.currentThreadId = data.thread_id || threadId;
+            this.renderThreadMessages(data.messages || []);
+            this.outputSection.style.display = 'block';
             
             this.closeSidebar();
             this.promptInput.focus();
             
         } catch (error) {
             console.error('Error loading task:', error);
-            this.showError('Failed to load task from history');
+            this.showError('Failed to load conversation');
         }
     }
-    
-    async showTaskDetails(taskId) {
+
+    confirmDeleteThread(threadId) {
+        this.pendingAction = () => this.deleteThread(threadId);
+        this.confirmMessage.textContent = 'Delete this chat? This will remove the whole conversation.';
+        this.confirmModal.classList.add('show');
+    }
+
+    async deleteThread(threadId) {
         try {
-            const response = await fetch(`/history/${taskId}`);
+            const response = await fetch(`/threads/${threadId}`, { method: 'DELETE' });
             if (!response.ok) {
-                throw new Error('Failed to load task details');
+                throw new Error('Failed to delete thread');
             }
-            
-            const task = await response.json();
-            
-            // Populate task details modal
-            this.taskStatus.textContent = task.status;
-            this.taskStatus.className = `task-status ${task.status}`;
-            this.taskCreated.textContent = new Date(task.created_at).toLocaleString();
-            this.taskCompleted.textContent = task.completed_at ? 
-                new Date(task.completed_at).toLocaleString() : 'Not completed';
-            this.taskPromptContent.textContent = task.prompt;
-            this.taskOutputContent.textContent = task.output || 'No output available';
-            
-            // Store current task ID for deletion
-            this.currentTaskId = taskId;
-            
-            this.taskDetailsModal.classList.add('show');
-            
+            this.hideConfirmModal();
+            this.showSuccess('Chat deleted successfully');
+            if (this.currentThreadId === threadId) {
+                this.currentThreadId = null;
+                if (this.chatThread) this.chatThread.innerHTML = '';
+                this.outputSection.style.display = 'none';
+            }
+            this.loadHistory();
         } catch (error) {
-            console.error('Error loading task details:', error);
-            this.showError('Failed to load task details');
+            console.error('Error deleting thread:', error);
+            this.showError('Failed to delete chat');
         }
     }
     
@@ -741,7 +786,7 @@ class CrewAIManager {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new CrewAIManager();
+    window.crewAIManager = new CrewAIManager();
 });
 
 // Add some utility functions for better UX

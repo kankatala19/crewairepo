@@ -1166,8 +1166,48 @@ body {
     overflow-y: auto;
     line-height: 1.6;
     color: #374151;
-    white-space: pre-wrap;
     word-wrap: break-word;
+}
+
+/* Chat-style output (ChatGPT-like) */
+.chat-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chat-message {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1rem 1.25rem;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    white-space: pre-wrap;
+}
+
+.chat-message .chat-role {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.chat-message.user {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.chat-message.assistant {
+    background: #ffffff;
+    border-color: #cbd5e1;
+}
+
+.chat-message .chat-content {
+    color: #1f2937;
+    line-height: 1.65;
 }
 
 /* Loading Overlay */
