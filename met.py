@@ -1,10 +1,13 @@
+import os
 import requests
 import time
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
 import matplotlib.pyplot as plt
+from dotenv import load_dotenv
 
-API_KEY = "AIzaSyC3YNVcgOmFDakyAB6kfkWy8bdSY1HgH9g"
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
 
 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_KEY}"
 
