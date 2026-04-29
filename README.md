@@ -1,174 +1,94 @@
-🤖 Multi-Agent AI Chat Application
+# 🤖 Multi-Agent AI Chat Application
 
-A modern, responsive AI chat web application powered by Perplexity’s advanced language models. Built using Flask, HTML5, CSS3, and JavaScript, this project demonstrates clean full-stack integration with a production-aware design approach.
+A modern, responsive AI-powered chat web application built using **Flask, HTML, CSS, and JavaScript**, integrated with **Perplexity AI models**.
 
-🚀 Overview
+This project demonstrates **Full Stack Development, AI API Integration, Responsive UI Design, and Backend Engineering**.
 
-This application provides an intelligent conversational interface backed by the Perplexity API. It focuses on delivering a smooth user experience, structured backend logic, secure API handling, and modular architecture.
+---
 
-The system is lightweight, scalable in design, and easy to extend for production deployments.
+## 🚀 Overview
 
-✨ Key Features
-🤖 AI-Powered Chat
+The Multi-Agent AI Chat Application provides an intelligent conversational experience through a clean and modern chat interface.
 
-Integrated with Perplexity’s LLM models
+It is designed with:
 
-Balanced response accuracy using controlled temperature
+- Clean UI/UX
+- Secure backend integration
+- Real-time chat interaction
+- Responsive design
+- Scalable architecture
 
-Structured request-response handling
+---
 
-🎨 Modern User Interface
+## ✨ Features
 
-Clean and responsive chat layout
+### 🤖 AI Chat
 
-Gradient-based UI design
+- Powered by Perplexity API
+- Fast intelligent responses
+- Optimized model settings
+- Structured request-response flow
 
-Smooth animations and transitions
+### 🎨 Modern UI
 
-Minimal, user-friendly interface
+- Beautiful chat layout
+- Smooth animations
+- Gradient styling
+- Clean user experience
 
-⚡ Real-Time Interaction
+### ⚡ Real-Time Interaction
 
-Instant AI responses
+- Instant replies
+- Loading indicators
+- Character counter
+- Keyboard shortcuts
 
-Loading indicators
+### 📱 Responsive Design
 
-Live character counter
+- Desktop friendly
+- Tablet optimized
+- Mobile responsive
 
-Keyboard shortcuts for improved productivity
+### 🔐 Security
 
-📱 Fully Responsive
+- API key protection
+- Backend validation
+- Error handling
+- User-friendly alerts
 
-Optimized for desktop
+### 📋 Extra UX Features
 
-Works smoothly on tablets
+- Copy AI responses
+- Auto-scroll messages
+- Clean formatting
+- Smooth interactions
 
-Mobile-friendly design
+---
 
-🔐 Security & Validation
+## 🛠️ Tech Stack
 
-API key protection
+| Technology | Usage |
+|------------|-------|
+| Flask | Backend Framework |
+| Python | Server Logic |
+| HTML5 | Structure |
+| CSS3 | Styling |
+| JavaScript | Frontend Logic |
+| Perplexity API | AI Responses |
 
-Backend input validation
+---
 
-Structured error handling
+## 📂 Project Structure
 
-User-friendly modal error dialogs
+```bash
+project/
+│── app.py
+│── requirements.txt
+│── templates/
+│   └── index.html
+│── static/
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── script.js
 
-📋 Enhanced User Experience
-
-Click-to-copy AI responses
-
-Clear system feedback
-
-Proper message formatting
-
-🏗️ Tech Stack
-
-Backend: Flask
-
-LLM Provider: Perplexity API
-
-Frontend: HTML5, CSS3, JavaScript
-
-Styling: Custom CSS with animations
-
-Deployment Ready: Docker-compatible structure
-
-📂 Project Structure
-
-app.py – Main Flask backend application
-
-requirements.txt – Python dependencies
-
-templates/ – Contains HTML templates
-
-static/css/ – Styling and animations
-
-static/js/ – Frontend logic and interactivity
-
-⚙️ Installation
-
-Clone or download the project files
-
-Install the required Python dependencies
-
-Configure your Perplexity API key
-
-Run the Flask application
-
-Open the application in your browser at localhost
-
-🔧 API Configuration
-
-Model: perplexity/sonar
-
-Temperature: 0.3
-
-Max Tokens: 1000
-
-These settings ensure a balance between response creativity and factual accuracy.
-
-🎯 Customization
-
-UI styling can be modified in the CSS files
-
-Frontend behavior can be adjusted in the JavaScript files
-
-Backend routing and API handling can be extended in the Flask application
-
-Model parameters can be tuned for different response styles
-
-⌨️ Keyboard Shortcuts
-
-Enter → Send message
-
-Shift + Enter → New line
-
-Escape → Close modal dialogs
-
-Ctrl + / → Focus input field
-
-🔐 Security Considerations (Production)
-
-For production deployment, consider:
-
-Using environment variables for API keys
-
-Adding authentication (JWT or OAuth)
-
-Implementing rate limiting
-
-Adding request timeouts
-
-Introducing logging and monitoring
-
-Deploying behind a reverse proxy
-
-⚠️ Known Limitations
-
-No user authentication system
-
-No persistent conversation history
-
-No rate limiting
-
-Debug mode enabled by default
-
-Designed primarily for single-user testing
-
-📈 Future Improvements
-
-Streaming AI responses
-
-Persistent chat history
-
-User login system
-
-Multi-agent architecture
-
-RAG integration with vector databases
-
-Cloud deployment
-
-WebSocket-based real-time streaming
